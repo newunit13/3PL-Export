@@ -1,5 +1,6 @@
-from mongoengine import connect, Document, DynamicDocument, StringField, IntField, DateField, BooleanField, ReferenceField, DictField
+from mongoengine import connect, Document, DynamicDocument, StringField, IntField, DateTimeField, BooleanField, ReferenceField, DictField, ListField
 from credentials import db_id, db_pw
+from datetime import datetime
 
 connect(
     db='B4BWMS', 
@@ -12,43 +13,90 @@ connect(
 #### Document Schemas
 
 class Warehouse(Document):
-    pass
+    name            = StringField(required=True)
+    locations       = DictField()
+
+    def addLocation(self, location):
+        if not self.locations.get(location.id.__str__()):               # pylint: disable=no-member
+            self.locations[location.id.__str__()] = location.name       # pylint: disable=unsupported-assignment-operation
+        else:
+            raise Exception("Location already exist.")
 
 class Location(Document):
-    pass
+    warehouse       = ReferenceField(Warehouse, required=True) 
+    name            = StringField(required=True)
+    type            = StringField(choices=['Storage', 'Staging', 'Picking', 'Quarantine'], default='Storage')
+    priority        = IntField()
 
 class Customer(DynamicDocument):
-    id      = IntField(unique=True, required=True)
-    name    = StringField(required=True)
+    name            = StringField(required=True)
+    reference       = DictField
 
 class Item(DynamicDocument):
-    id              = IntField(unique=True, required=True)
     sku             = StringField()
     upc             = StringField()
     description     = StringField()
+    reference       = DictField()
 
 class PurchaseOrder(DynamicDocument):
-    id              = IntField(unique=True, required=True),
     reference       = DictField()
- 
+
+class Receiver(DynamicDocument):
+    items           = ListField()
+    reference       = DictField()
+
+class Order(DynamicDocument):
+    customer        = ReferenceField(Customer)
+    items           = ListField()
+
 class Inventory(Document):
-    receiverId      = IntField()
-    receivedDate    = DateField()
-    customerId      = ReferenceField(Customer)
-    itemId          = ReferenceField(Item)
-    purchaseOrderId = ReferenceField(PurchaseOrder)
+    customer        = ReferenceField(Customer)
+    item            = ReferenceField(Item)
+    receivedQty     = IntField()
+    onHand          = IntField()
+    available       = IntField()
+    location        = ReferenceField(Location)
+    receiver        = ReferenceField(Receiver)
+    receivedDate    = DateTimeField(default=datetime.utcnow)
+    purchaseOrder   = ReferenceField(PurchaseOrder)
+    reference       = DictField()
 
 
-
-c1 = Customer(
-    custId = 0,
-    custName = "Test Customer"
+warehouse = Warehouse(
+    name = "Progress Blvd"
 ).save()
 
-i1 = Item(
-    itemId = 0,
-    itemDescription = "Test Item"
+location = Location(
+    warehouse = warehouse,
+    name = "N01A01"
 ).save()
+
+warehouse.addLocation(location)
+warehouse.save()
+
+customer = Customer(
+    name = "Test Customer"
+).save()
+
+item = Item(
+    sku = "SKU12345",
+    description = "Test Item",
+).save()
+
+receiver1 = Receiver().save()
+
+receipt1 = Inventory(
+    customer = customer,
+    item = item,
+    receivedQty = 100,
+    onHand = 100,
+    available = 100,
+    location = location,
+    receiver = receiver1
+).save()
+
+receiver1.items.append(receipt1)
+receiver1.save()
 
 
 print("done")
