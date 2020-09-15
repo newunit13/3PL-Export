@@ -280,6 +280,55 @@ def GetCustomers(pgsiz=100, pgnum=1, rql="", sort="", facilityId=""):
 
     return customers
 
+def GetLocations(pgsiz=100, pgnum=1, rql="", sort="", beginlocationid="", endlocationid=""):
+    options = {
+        "pgsiz": pgsiz,
+        "pgnum": pgnum,
+        "rql": rql,
+        "sort": sort,
+        "beginlocationid": beginlocationid,
+        "endlocationid": endlocationid
+    }
+    options = {k:v for k,v in options.items() if v}
+    options = urlencode(options)
+    base_url = f"https://secure-wms.com"
+    url = f"{base_url}/properties/facilities/locations?{options}"
+
+    headers = {
+        "Host"              : "secure-wms.com",
+        "Content-Type"      : "application/hal+json; charset=utf-8",
+        "Accept"            : "application/hal+json",
+        "Authorization"     : f"Bearer {access_token}"
+    }
+
+    response = requests.get(url=url, headers=headers)
+    data = response.json()
+
+    total_results = data["totalResults"]
+    current_progress = 0
+    locations = []
+
+    while True:
+
+        print(f'Gathering page {pgnum}.\t{current_progress} out of {total_results} [{current_progress/total_results:2.2%}]')
+
+        response = requests.get(url=url, headers=headers)
+        
+        if response.status_code != 200:
+            raise Exception
+
+        data = response.json()
+        locations += data['_embedded']['http://api.3plCentral.com/rels/properties/location']
+
+        current_progress += pgsiz
+        pgnum += 1
+    
+        if data.get("_links").get("next"):
+            url = f'{base_url}{data.get("_links").get("next").get("href")}'
+        else:
+            break
+
+    return locations
 
 global access_token
 access_token = GetAccessToken(tpl_id, tpl_secret, tpl_guid, tpl_user_id)
@@ -288,17 +337,11 @@ access_token = GetAccessToken(tpl_id, tpl_secret, tpl_guid, tpl_user_id)
 # testing code below
 if __name__ == '__main__':
 
-    customers = GetCustomers()
-    print("Active|Customer|Name|Title|Phone|Fax|Email")
-    for customer in customers:
-        customer_name = customer['companyInfo']['companyName']
-        if customer.get("primaryContact") == None:
-            contact_info = ""
-        else:
-            contact = customer["primaryContact"]
-            contact_info = (contact.get("name"), contact.get("title"), contact.get("phoneNumber"), contact.get("fax"), contact.get("emailAddress"))
-            contact_info = [attrib if attrib != None else "" for attrib in contact_info]
-        #print(f"{not customer['readOnly']['deactivated']}|{customer_name}|{'|'.join(contact_info)}")
-        print(f"{not customer['readOnly']['deactivated']}")
+    
+    locations = GetLocations(pgsiz=100, rql="facilityIdentifier.id==2;name==N*")
+    with open('file.txt', 'w') as f:
+        for location in locations:
+            f.write(f'{location["name"]}\n')
+    print()
 
     
