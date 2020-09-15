@@ -338,10 +338,10 @@ access_token = GetAccessToken(tpl_id, tpl_secret, tpl_guid, tpl_user_id)
 if __name__ == '__main__':
 
     
-    locations = GetLocations(pgsiz=100, rql="facilityIdentifier.id==2;name==N*")
+    locations = GetLocations(pgsiz=100, rql="facilityIdentifier.id==2;name==N*;deactivated==False")
     with open('file.txt', 'w') as f:
         for location in locations:
-            f.write(f'{location["name"]}\n')
+            f.write(f'{location["name"]}\t{location["hasInventory"]}\n')
     print()
 
     
