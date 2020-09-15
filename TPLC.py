@@ -231,6 +231,56 @@ def UpdateItem(customer_id, item_id, etag, payload):
 
     return True
 
+def GetCustomers(pgsiz=100, pgnum=1, rql="", sort="", facilityId=""):
+    options = {
+        "pgsiz": pgsiz,
+        "pgnum": pgnum,
+        "rql": rql,
+        "sort": sort,
+        "facilityId": facilityId
+    }
+    options = {k:v for k,v in options.items() if v}
+    options = urlencode(options)
+    base_url = f"https://secure-wms.com"
+    url = f"{base_url}/customers?{options}"
+
+    headers = {
+        "Host"              : "secure-wms.com",
+        "Content-Type"      : "application/hal+json; charset=utf-8",
+        "Accept"            : "application/hal+json",
+        "Authorization"     : f"Bearer {access_token}"
+    }
+
+    response = requests.get(url=url, headers=headers)
+    data = response.json()
+
+    total_results = data["totalResults"]
+    current_progress = 0
+    customers = []
+
+    while True:
+
+        print(f'Gathering page {pgnum}.\t{current_progress} out of {total_results} [{current_progress/total_results:2.2%}]')
+
+        response = requests.get(url=url, headers=headers)
+        
+        if response.status_code != 200:
+            raise Exception
+
+        data = response.json()
+        customers += data['_embedded']['http://api.3plCentral.com/rels/customers/customer']
+
+        current_progress += pgsiz
+        pgnum += 1
+    
+        if data.get("_links").get("next"):
+            url = f'{base_url}{data.get("_links").get("next").get("href")}'
+        else:
+            break
+
+    return customers
+
+
 global access_token
 access_token = GetAccessToken(tpl_id, tpl_secret, tpl_guid, tpl_user_id)
 
@@ -238,9 +288,17 @@ access_token = GetAccessToken(tpl_id, tpl_secret, tpl_guid, tpl_user_id)
 # testing code below
 if __name__ == '__main__':
 
-    item, etag = GetItem(1, 8504)
-    item["sku"] = "04719-test"
-    UpdateItem(1, item["itemId"], etag, item)
+    customers = GetCustomers()
+    print("Active|Customer|Name|Title|Phone|Fax|Email")
+    for customer in customers:
+        customer_name = customer['companyInfo']['companyName']
+        if customer.get("primaryContact") == None:
+            contact_info = ""
+        else:
+            contact = customer["primaryContact"]
+            contact_info = (contact.get("name"), contact.get("title"), contact.get("phoneNumber"), contact.get("fax"), contact.get("emailAddress"))
+            contact_info = [attrib if attrib != None else "" for attrib in contact_info]
+        #print(f"{not customer['readOnly']['deactivated']}|{customer_name}|{'|'.join(contact_info)}")
+        print(f"{not customer['readOnly']['deactivated']}")
 
-    print("")
     
