@@ -2,12 +2,44 @@ import base64
 import requests
 import json
 import time
+import re
 from urllib.parse import urlencode
 from credentials import tpl_id, tpl_secret, tpl_guid, tpl_user_id
 
 
 
 #----------------------------------------------------------------------------------------------
+def Billboard():
+    url = "https://secure-wms.com/billboard"
+    response = requests.get(url=url)
+    top_level = response.json()
+
+    billboard = {'root': "https://secure-wms.com", 'billboard': 'https://secure-wms.com/billboard'}
+    for level in top_level.get("_links"):
+        service = level["Rel"].split("/")[-1]
+        href = level["Href"][1:]
+        
+        url = billboard["billboard"] + href
+        response = requests.get(url=url)
+        data = response.json()
+
+        items = {'root': data.get("RootUri")}
+        for link in data.get("_links"):
+            item = link["Rel"].split("/")[-1]
+            matches = re.match(r'(.*){\?(.*)}', link["Href"])
+            if matches:
+                endpoint = matches[1]
+                options = matches[2].split(',')
+            else:
+                endpoint = link["Href"]
+                options = None
+
+            items[item] = {'uri': endpoint, 'options': options}
+
+        billboard[service] = items
+
+    return billboard
+
 
 def GetAccessToken(tpl_id, tpl_secret, tpl_guid, tpl_user_id):
 
@@ -301,24 +333,21 @@ def GetLocations(pgsiz=100, pgnum=1, rql="", sort="", beginlocationid="", endloc
         "Authorization"     : f"Bearer {access_token}"
     }
 
-    response = requests.get(url=url, headers=headers)
-    data = response.json()
 
-    total_results = data["totalResults"]
     current_progress = 0
     locations = []
 
     while True:
 
-        print(f'Gathering page {pgnum}.\t{current_progress} out of {total_results} [{current_progress/total_results:2.2%}]')
-
         response = requests.get(url=url, headers=headers)
-        
         if response.status_code != 200:
             raise Exception
 
         data = response.json()
+        total_results = data["totalResults"]
         locations += data['_embedded']['http://api.3plCentral.com/rels/properties/location']
+
+        print(f'Gathering page {pgnum}.\t{current_progress} out of {total_results} [{current_progress/total_results:2.2%}]')
 
         current_progress += pgsiz
         pgnum += 1
@@ -336,6 +365,8 @@ access_token = GetAccessToken(tpl_id, tpl_secret, tpl_guid, tpl_user_id)
 
 # testing code below
 if __name__ == '__main__':
+
+    a = Billboard()
 
     
     locations = GetLocations(pgsiz=100, rql="facilityIdentifier.id==2;name==N*;deactivated==False")
