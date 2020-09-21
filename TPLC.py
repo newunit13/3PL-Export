@@ -34,12 +34,11 @@ def Billboard():
                 endpoint = link["Href"]
                 options = None
 
-            items[item] = {'uri': endpoint, 'options': options}
+            items[item] = {'url': billboard.get("root") + endpoint, 'endpoint': endpoint, 'options': options}
 
         billboard[service] = items
 
     return billboard
-
 
 def GetAccessToken(tpl_id, tpl_secret, tpl_guid, tpl_user_id):
 
@@ -366,13 +365,11 @@ access_token = GetAccessToken(tpl_id, tpl_secret, tpl_guid, tpl_user_id)
 # testing code below
 if __name__ == '__main__':
 
-    a = Billboard()
+    #a = Billboard()
 
-    
-    locations = GetLocations(pgsiz=100, rql="facilityIdentifier.id==2;name==N*;deactivated==False")
-    with open('file.txt', 'w') as f:
+    locations = GetLocations(pgsiz=100, rql="facilityIdentifier.id==2;deactivated==False")
+    with open('output.tsv', 'w') as f:
         for location in locations:
             f.write(f'{location["name"]}\t{location["hasInventory"]}\n')
     print()
 
-    
