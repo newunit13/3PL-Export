@@ -1,7 +1,6 @@
 import base64
 import requests
 import json
-import time
 import re
 from urllib.parse import urlencode
 from credentials import tpl_id, tpl_secret, tpl_guid, tpl_user_id
@@ -42,9 +41,6 @@ def Billboard():
 
 def GetAccessToken(tpl_id, tpl_secret, tpl_guid, tpl_user_id):
 
-    print(f"GetAccessToken() called.")
-    clock_start = time.time()
-
     secret_key = f'{tpl_id}:{tpl_secret}'.encode('utf-8')
     secret_key = base64.b64encode(secret_key).decode('utf-8')
 
@@ -63,7 +59,7 @@ def GetAccessToken(tpl_id, tpl_secret, tpl_guid, tpl_user_id):
     })
 
     response = requests.post(url=url, headers=headers, data=data)
-    print(f"GetAccessToken() took {time.time() - clock_start:2.2f} seconds.\tStatus Code: {response.status_code}")
+    print(f"GetAccessToken() called.\tStatus Code: {response.status_code}")
 
     return response.json()["access_token"]
 
