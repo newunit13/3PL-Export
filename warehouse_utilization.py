@@ -45,14 +45,14 @@ df.reset_index(inplace=True)
 # Create True/False column for DAX inventory
 df['DAX'] = df[['Qty']].apply(lambda x: x > 0)
 
+# Clean up DataFrame
+df.rename(columns={0: 'TPL'}, inplace=True)
+df.drop(columns=['Qty'], inplace=True)
+
 # Add columns for aggregation analysis
 df['Either'] = np.where(df['TPL'] | df['DAX'], True, False)
 df['Both'] = np.where(df['TPL'] & df['DAX'], True, False)
 df['Date'] = datetime.today()
-
-# Clean up DataFrame
-df.rename(columns={0: 'TPL'}, inplace=True)
-df.drop(columns=['Qty'], inplace=True)
 
 # Set up connection to Warehouse database
 params = urllib.parse.quote_plus("DRIVER={SQL Server};SERVER=DAXTEST;DATABASE=Warehouse")
