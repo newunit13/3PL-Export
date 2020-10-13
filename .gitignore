@@ -9,4 +9,11 @@ __pycache__/
 *.code-workspace
 
 .history/
+
+.venv/
+
+dist/
+build/
+*.spec
+
 credentials.py
