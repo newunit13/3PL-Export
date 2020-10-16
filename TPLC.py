@@ -354,6 +354,42 @@ def GetLocations(pgsiz=100, pgnum=1, rql="", sort="", beginlocationid="", endloc
 
     return locations
 
+def GetOrders(pgsiz=100,pgnum=1,rql="",sort="",detail="",itemdetail=""):
+    options = {
+        "pgsiz"     : pgsiz,
+        "pgnum"     : pgnum,
+        "rql"       : rql,
+        "sort"      : sort,
+        "detail"    : detail,
+        "itemdetail": itemdetail
+    }
+    options = {k:v for k,v in options.items() if v}
+    options = urlencode(options)
+
+    base_url = f"https://secure-wms.com"
+    url = f"{base_url}/orders?{options}"
+
+    headers = {
+        "Host"              : "secure-wms.com",
+        "Content-Type"      : "application/hal+json; charset=utf-8",
+        "Accept"            : "application/hal+json",
+        "Authorization"     : f"Bearer {access_token}"
+    }
+
+    orders = []
+    while True:
+        response = requests.get(url=url, headers=headers)
+        data = response.json()
+        orders += data["_embedded"]["http://api.3plCentral.com/rels/orders/order"]
+        if data.get("_links").get("next"):
+            url = f'{base_url}{data.get("_links").get("next").get("href")}'
+        else:
+            break
+
+
+    orders = {o["readOnly"]["orderId"]:o for o in orders}
+    return orders
+
 global access_token
 access_token = GetAccessToken(tpl_id, tpl_secret, tpl_guid, tpl_user_id)
 
@@ -363,9 +399,6 @@ if __name__ == '__main__':
 
     #a = Billboard()
 
-    locations = GetLocations(pgsiz=100, rql="facilityIdentifier.id==2;deactivated==False")
-    with open('output.tsv', 'w') as f:
-        for location in locations:
-            f.write(f'{location["name"]}\t{location["hasInventory"]}\n')
+    orders = GetOrders(detail="All",rql="readOnly.isClosed==True;readOnly.customerIdentifier.id!=1038;readOnly.creationDate=gt=2020-10-01;referenceNum!=*CANCELED*")
     print()
 
