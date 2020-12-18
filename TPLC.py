@@ -390,6 +390,47 @@ def GetOrders(pgsiz=100,pgnum=1,rql="",sort="",detail="",itemdetail=""):
     orders = {o["readOnly"]["orderId"]:o for o in orders}
     return orders
 
+def GetBaseReports():
+
+    base_url = f"https://secure-wms.com"
+    url = f"{base_url}/reportdefs/ssrs/names"
+
+    headers = {
+        "Host"              : "secure-wms.com",
+        "Content-Type"      : "application/hal+json; charset=utf-8",
+        "Accept"            : "application/hal+json",
+        "Authorization"     : f"Bearer {access_token}"
+    }
+
+    response = requests.get(url=url, headers=headers)
+    reports = response.json()
+
+    return reports
+
+def RunCustomReport(name, customname, parameters="", customerid=""):
+    options = {
+        "parameters": parameters,
+        "customerid": customerid
+    }
+    options = {k:v for k,v in options.items() if v}
+    options = urlencode(options)
+
+    base_url = f"https://secure-wms.com"
+    url = f"{base_url}/reportdefs/ssrs/{name}/runner?{options}"
+
+    headers = {
+        "Host"              : "secure-wms.com",
+        "Content-Type"      : "application/hal+json; charset=utf-8",
+        "Accept"            : "application/hal+json",
+        "Authorization"     : f"Bearer {access_token}"
+    }
+    
+    response = requests.get(url=url, headers=headers)
+    data = response.json()
+
+    return data
+
+
 global access_token
 access_token = GetAccessToken(tpl_id, tpl_secret, tpl_guid, tpl_user_id)
 
@@ -399,6 +440,9 @@ if __name__ == '__main__':
 
     #a = Billboard()
 
-    orders = GetOrders(detail="All",rql="readOnly.isClosed==True;readOnly.customerIdentifier.id!=1038;readOnly.creationDate=gt=2020-10-01;referenceNum!=*CANCELED*")
-    print()
+    #orders = GetOrders(detail="All",rql="readOnly.isClosed==True;readOnly.customerIdentifier.id!=1038;readOnly.creationDate=gt=2020-10-01;referenceNum!=*CANCELED*")
+    #reports = GetReports()
+    #receipts = GetReceipts(rql="poNum==1234")
+    report = RunCustomReport("Item_Activity_Report", "ElucidateFeed", parameters="StartDate:12/17/2020~EndDate:12/17/2020~CustomerID:20~FacilityID:2")
 
+    print()
