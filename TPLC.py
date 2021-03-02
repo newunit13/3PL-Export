@@ -390,6 +390,53 @@ def GetOrders(pgsiz=100,pgnum=1,rql="",sort="",detail="",itemdetail=""):
     orders = {o["readOnly"]["orderId"]:o for o in orders}
     return orders
 
+def GetPurchaseOrders(pgsiz="1000", rql=""):
+    options = {
+        "pgsiz": pgsiz,
+        "rql": rql
+    }
+    options = {k:v for k,v in options.items() if v}
+    options = urlencode(options)
+    base_url = f"https://secure-wms.com"
+    url = f"{base_url}/inventory/pos?{options}"
+    headers = {
+        "Host"              : "secure-wms.com",
+        "Content-Type"      : "application/hal+json; charset=utf-8",
+        "Accept"            : "application/hal+json",
+        "Authorization"     : f"Bearer {access_token}"
+    }
+
+
+    purchase_orders = []
+    while True:
+        response = requests.get(url=url, headers=headers)
+        data = response.json()
+        purchase_orders += data["_embedded"]["http://api.3plCentral.com/rels/inventory/purchaseorder"]
+        if data.get("_links").get("next"):
+            url = f'{base_url}{data.get("_links").get("next").get("href")}'
+        else:
+            break
+
+    purchase_orders = {po["purchaseOrderNumber"]: po for po in purchase_orders}
+
+    return purchase_orders
+
+def GetPurchaseOrder(id=""):
+
+    base_url = f"https://secure-wms.com"
+    url = f"{base_url}/inventory/pos/{id}"
+    headers = {
+        "Host"              : "secure-wms.com",
+        "Content-Type"      : "application/hal+json; charset=utf-8",
+        "Accept"            : "application/hal+json",
+        "Authorization"     : f"Bearer {access_token}"
+    }
+
+    response = requests.get(url=url, headers=headers)
+    data = response.json()
+
+    return data
+
 def GetBaseReports():
 
     base_url = f"https://secure-wms.com"
@@ -408,6 +455,7 @@ def GetBaseReports():
     return reports
 
 def RunCustomReport(name, customname, parameters="", customerid=""):
+    print(f"Custom report {customname} ran with parameters: {parameters}")
     options = {
         "parameters": parameters,
         "customerid": customerid
@@ -416,19 +464,21 @@ def RunCustomReport(name, customname, parameters="", customerid=""):
     options = urlencode(options)
 
     base_url = f"https://secure-wms.com"
-    url = f"{base_url}/reportdefs/ssrs/{name}/runner?{options}"
-
+    url = f"{base_url}/reportdefs/ssrs/{name}/TplOnly/{customname}/runner?{options}"
+    #/reportdefs/ssrs/{name}/{for}/{customname}/runner{?parameters,customerid}
     headers = {
         "Host"              : "secure-wms.com",
-        "Content-Type"      : "application/hal+json; charset=utf-8",
-        "Accept"            : "application/hal+json",
+        "Content-Type"      : "text/csv",
+        "Accept"            : "text/csv;header=absent;separator=comma;excelmode=false",
         "Authorization"     : f"Bearer {access_token}"
     }
     
     response = requests.get(url=url, headers=headers)
-    data = response.json()
+    data = response.text
+    data = data[3:len(data)-2]
 
     return data
+
 
 
 global access_token
@@ -438,11 +488,30 @@ access_token = GetAccessToken(tpl_id, tpl_secret, tpl_guid, tpl_user_id)
 # testing code below
 if __name__ == '__main__':
 
+
+
+
+
+
     #a = Billboard()
 
     #orders = GetOrders(detail="All",rql="readOnly.isClosed==True;readOnly.customerIdentifier.id!=1038;readOnly.creationDate=gt=2020-10-01;referenceNum!=*CANCELED*")
     #reports = GetReports()
     #receipts = GetReceipts(rql="poNum==1234")
-    report = RunCustomReport("Item_Activity_Report", "ElucidateFeed", parameters="StartDate:12/17/2020~EndDate:12/17/2020~CustomerID:20~FacilityID:2")
+
+    #items = GetItems(20)
+    #itemIDs = ','.join([str(i["itemId"]) for i in items])
+
+    #itemIDs = '6703'
+
+    #report = RunCustomReport("Item_Activity_Report", "ElucidateFeed", parameters=f"StartDate:12/17/2020~EndDate:12/17/2020~CustomerID:20~FacilityID:2~ItemIDs:{itemIDs}~utcOffset:0")
+    #report = RunCustomReport("Item_Activity_Report", "ElucidateFeed", parameters=f"StartDate:01/20/2021~EndDate:01/21/2021~CustomerID:20~FacilityID:2~ItemIDs:{itemIDs}~utcOffset:-5")
+
+    #report = []
+    #for day in range(12,27):
+    #    report.append(RunCustomReport("Item_Activity_Report", "ElucidateFeed", parameters=f"StartDate:01/{day}/2021~EndDate:01/{day+1}/2021~CustomerID:20~FacilityID:2~ItemIDs:{itemIDs}~utcOffset:-5"))
+
+    #pos = GetPurchaseOrders()
+    #print(report)
 
     print()
