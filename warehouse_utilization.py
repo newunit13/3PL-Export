@@ -23,7 +23,7 @@ try:
   LEFT JOIN INVENTSUM ins ON ins.INVENTDIMID = ind.INVENTDIMID and ins.DATAAREAID = ind.DATAAREAID
   WHERE wms.DATAAREAID = 'ssl'
     AND wms.INVENTLOCATIONID in ('Progress')
-    AND LEFT(wms.WMSLOCATIONID, 1) = 'N'
+    --AND LEFT(wms.WMSLOCATIONID, 1) = 'N'                 -- ER commented out on 3/1/2021 per change requested by Pam Graser
   GROUP BY wms.INVENTLOCATIONID, wms.WMSLOCATIONID
   ORDER BY wms.INVENTLOCATIONID, wms.WMSLOCATIONID
   '''
@@ -32,7 +32,7 @@ try:
   dax_df = pd.read_sql_query(sql_query, engine, index_col='Location')
 
   # Collect 3PL Data
-  locations_raw = TPLC.GetLocations(pgsiz=10000, rql="facilityIdentifier.id==2;deactivated==False;name==N*")
+  locations_raw = TPLC.GetLocations(pgsiz=10000, rql="facilityIdentifier.id==2;deactivated==False")
   locations = {location["name"]: location["hasInventory"] for location in locations_raw}
 
   # Convert 3PL Data into DataFrame
