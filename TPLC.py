@@ -479,6 +479,52 @@ def RunCustomReport(name, customname, parameters="", customerid=""):
 
     return data
 
+def CreateOrder():
+
+    base_url = f"https://secure-wms.com"
+    url = f"{base_url}/orders"
+
+    headers = {
+        "Host"              : "secure-wms.com",
+        "Content-Type"      : "application/hal+json; charset=utf-8",
+        "Accept"            : "application/hal+json",
+        "Authorization"     : f"Bearer {access_token}"
+    }
+
+    data = {
+        "customerIdentifier": {
+            "id": "1077"
+        },
+        "facilityIdentifier": {
+            "id": "2"
+        },
+        "referenceNum": "3150",
+        "billingCode": "Prepaid",
+        "routingInfo": {
+            "carrier": "UPS",
+            "mode": "92",
+        },
+        "shipTo": {
+            "name":"Test Company",
+            "address1":"1207 Washington Ave 2",
+            "city":"Golden",
+            "state":"CO",
+            "zip":"80401",
+            "country":"US"
+        },
+        "orderItems": [
+            {
+                "itemIdentifier": {
+                    "sku": "FER-1234-0001"
+                },
+                "qty": 1
+            }
+        ]
+    }
+    
+    response = requests.post(url=url, headers=headers, data=data)
+    reports = response.json()
+    return 0
 
 
 global access_token
@@ -490,8 +536,8 @@ if __name__ == '__main__':
 
 
 
-
-
+    a = GetPurchaseOrder(781)
+    print(a)
 
     #a = Billboard()
 
