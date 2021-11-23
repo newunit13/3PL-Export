@@ -390,6 +390,45 @@ def GetOrders(pgsiz=100,pgnum=1,rql="",sort="",detail="",itemdetail=""):
     orders = {o["readOnly"]["orderId"]:o for o in orders}
     return orders
 
+def GetOrdersSummary(pgsiz=100,pgnum=1,rql="",sort="",orderidcontains="",receiverid=""):
+    options = {
+        "pgsiz"     : pgsiz,
+        "pgnum"     : pgnum,
+        "rql"       : rql,
+        "sort"      : sort,
+        "orderidcontains"    : orderidcontains,
+        "receiverid": receiverid
+    }
+    options = {k:v for k,v in options.items() if v}
+    options = urlencode(options)
+
+    base_url = f"https://secure-wms.com"
+    url = f"{base_url}/orders/summaries?{options}"
+
+    headers = {
+        "Host"              : "secure-wms.com",
+        "Content-Type"      : "application/hal+json; charset=utf-8",
+        "Accept"            : "application/hal+json",
+        "Authorization"     : f"Bearer {access_token}"
+    }
+
+    orders = []
+    while True:
+        response = requests.get(url=url, headers=headers)
+        data = response.json()
+        orders += data["_embedded"]["http://api.3plCentral.com/rels/orders/order"]
+        if data.get("_links").get("next"):
+            url = f'{base_url}{data.get("_links").get("next").get("href")}'
+        else:
+            break
+
+
+    orders = {o["readOnly"]["orderId"]:o for o in orders}
+    return orders
+
+def GetPackage():
+    pass
+
 def GetPurchaseOrders(pgsiz="1000", rql=""):
     options = {
         "pgsiz": pgsiz,
@@ -536,7 +575,7 @@ if __name__ == '__main__':
 
 
 
-    a = GetPurchaseOrder(781)
+    a = GetOrdersSummary()
     print(a)
 
     #a = Billboard()
