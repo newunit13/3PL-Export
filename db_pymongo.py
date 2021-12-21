@@ -11,7 +11,7 @@ customers = db["customers"]
 orders = db["orders"]
 
 clock_start = time.time()
-tpl_inventory = TPLC.GetInventory(pgsiz=1000,rql="customeridentifier.id==1;facilityidentifier.id==2")
+tpl_inventory = TPLC.get_inventory(pgsiz=1000,rql="customeridentifier.id==1;facilityidentifier.id==2")
 print(f"TPL inventory get took {time.time() - clock_start:2.2f} seconds.")
 
 record_count = len(tpl_inventory)

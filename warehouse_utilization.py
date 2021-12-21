@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import pyodbc
 from sqlalchemy import create_engine
-from six.moves import urllib
+from six import urllib
 from datetime import datetime
 
 
@@ -32,7 +32,7 @@ try:
   dax_df = pd.read_sql_query(sql_query, engine, index_col='Location')
 
   # Collect 3PL Data
-  locations_raw = TPLC.GetLocations(pgsiz=10000, rql="facilityIdentifier.id==2;deactivated==False")
+  locations_raw = TPLC.get_locations(pgsiz=10000, rql="facilityIdentifier.id==2;deactivated==False")
   locations = {location["name"]: location["hasInventory"] for location in locations_raw}
 
   # Convert 3PL Data into DataFrame

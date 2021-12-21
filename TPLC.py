@@ -8,7 +8,7 @@ from credentials import tpl_id, tpl_secret, tpl_guid, tpl_user_id
 
 
 #----------------------------------------------------------------------------------------------
-def Billboard():
+def billboard():
     url = "https://secure-wms.com/billboard"
     response = requests.get(url=url)
     top_level = response.json()
@@ -39,7 +39,7 @@ def Billboard():
 
     return billboard
 
-def GetAccessToken(tpl_id, tpl_secret, tpl_guid, tpl_user_id):
+def get_access_token(tpl_id, tpl_secret, tpl_guid, tpl_user_id):
 
     secret_key = f'{tpl_id}:{tpl_secret}'.encode('utf-8')
     secret_key = base64.b64encode(secret_key).decode('utf-8')
@@ -63,7 +63,7 @@ def GetAccessToken(tpl_id, tpl_secret, tpl_guid, tpl_user_id):
 
     return response.json()["access_token"]
 
-def GetReceipts(detail="All",rql=""):
+def get_receipts(detail="All",rql=""):
     options = {
         "detail": detail,
         "rql": rql
@@ -92,7 +92,7 @@ def GetReceipts(detail="All",rql=""):
     receipts = {r["readOnly"]["receiverId"]:r for r in receipts}
     return receipts
 
-def GetStockStatus(customer_id):
+def get_stock_status(customer_id):
     base_url = "https://secure-wms.com"
     url = f"{base_url}/inventory/stockdetails?customerid={customer_id}&facilityid=2&pgsiz=100"
     headers = {
@@ -117,7 +117,7 @@ def GetStockStatus(customer_id):
          
     return inventory
 
-def GetInventory(pgsiz=100, pgnum=1, rql="", sort="", senameorvaluecontains="" ):
+def get_inventory(pgsiz=100, pgnum=1, rql="", sort="", senameorvaluecontains="" ):
     options = {
         "pgsiz": pgsiz,
         "pgnum": pgnum,
@@ -166,7 +166,7 @@ def GetInventory(pgsiz=100, pgnum=1, rql="", sort="", senameorvaluecontains="" )
 
     return items
 
-def GetItems(customer_id, pgsiz=100, pgnum=1, rql="", sort=""):
+def get_items(customer_id, pgsiz=100, pgnum=1, rql="", sort=""):
     options = {
         "pgsiz": pgsiz,
         "pgnum": pgnum,
@@ -214,7 +214,7 @@ def GetItems(customer_id, pgsiz=100, pgnum=1, rql="", sort=""):
 
     return items
 
-def GetItem(customer_id, item_id):
+def get_item(customer_id, item_id):
     base_url = f"https://secure-wms.com"
     url = f"{base_url}/customers/{customer_id}/items/{item_id}"
 
@@ -233,7 +233,7 @@ def GetItem(customer_id, item_id):
 
     return (item, response.headers["ETag"])
 
-def UpdateItem(customer_id, item_id, etag, payload):
+def update_item(customer_id, item_id, etag, payload):
     base_url = f"https://secure-wms.com"
     url = f"{base_url}/customers/{customer_id}/items/{item_id}"
 
@@ -258,7 +258,7 @@ def UpdateItem(customer_id, item_id, etag, payload):
 
     return True
 
-def GetCustomers(pgsiz=100, pgnum=1, rql="", sort="", facilityId=""):
+def get_customers(pgsiz=100, pgnum=1, rql="", sort="", facilityId=""):
     options = {
         "pgsiz": pgsiz,
         "pgnum": pgnum,
@@ -307,7 +307,7 @@ def GetCustomers(pgsiz=100, pgnum=1, rql="", sort="", facilityId=""):
 
     return customers
 
-def GetLocations(pgsiz=100, pgnum=1, rql="", sort="", beginlocationid="", endlocationid=""):
+def get_locations(pgsiz=100, pgnum=1, rql="", sort="", beginlocationid="", endlocationid=""):
     options = {
         "pgsiz": pgsiz,
         "pgnum": pgnum,
@@ -354,7 +354,17 @@ def GetLocations(pgsiz=100, pgnum=1, rql="", sort="", beginlocationid="", endloc
 
     return locations
 
-def GetOrders(pgsiz=100,pgnum=1,rql="",sort="",detail="",itemdetail=""):
+def get_orders(pgsiz: int=100,pgnum: int=1,rql: str="",sort: str="",detail: str="",itemdetail: str="") -> dict:
+    """Get a list of orders from the 3plCentral API.
+
+    Keyword arguments:
+    pgsiz       -- The number of results to return per page
+    pgnum       -- The page number to return
+    rql         -- A query string to filter the results
+    sort        -- A string to sort the results by
+    detail      -- A string to return the detail level of the results
+    itemdetail  -- A string to return the detail level of the items
+    """
     options = {
         "pgsiz"     : pgsiz,
         "pgnum"     : pgnum,
@@ -390,7 +400,7 @@ def GetOrders(pgsiz=100,pgnum=1,rql="",sort="",detail="",itemdetail=""):
     orders = {o["readOnly"]["orderId"]:o for o in orders}
     return orders
 
-def GetOrdersSummary(pgsiz=100,pgnum=1,rql="",sort="",orderidcontains="",receiverid=""):
+def get_order_summary(pgsiz=100,pgnum=1,rql="",sort="",orderidcontains="",receiverid=""):
     options = {
         "pgsiz"     : pgsiz,
         "pgnum"     : pgnum,
@@ -426,10 +436,10 @@ def GetOrdersSummary(pgsiz=100,pgnum=1,rql="",sort="",orderidcontains="",receive
     orders = {o["readOnly"]["orderId"]:o for o in orders}
     return orders
 
-def GetPackage():
+def get_package():
     pass
 
-def GetPurchaseOrders(pgsiz="1000", rql=""):
+def get_purcharse_orders(pgsiz="1000", rql=""):
     options = {
         "pgsiz": pgsiz,
         "rql": rql
@@ -460,7 +470,7 @@ def GetPurchaseOrders(pgsiz="1000", rql=""):
 
     return purchase_orders
 
-def GetPurchaseOrder(id=""):
+def get_pucharse_order(id=""):
 
     base_url = f"https://secure-wms.com"
     url = f"{base_url}/inventory/pos/{id}"
@@ -476,7 +486,7 @@ def GetPurchaseOrder(id=""):
 
     return data
 
-def GetBaseReports():
+def get_base_reports():
 
     base_url = f"https://secure-wms.com"
     url = f"{base_url}/reportdefs/ssrs/names"
@@ -493,7 +503,7 @@ def GetBaseReports():
 
     return reports
 
-def RunCustomReport(name, customname, parameters="", customerid=""):
+def run_custom_report(name, customname, parameters="", customerid=""):
     print(f"Custom report {customname} ran with parameters: {parameters}")
     options = {
         "parameters": parameters,
@@ -518,7 +528,7 @@ def RunCustomReport(name, customname, parameters="", customerid=""):
 
     return data
 
-def CreateOrder():
+def create_order():
 
     base_url = f"https://secure-wms.com"
     url = f"{base_url}/orders"
@@ -567,7 +577,7 @@ def CreateOrder():
 
 
 global access_token
-access_token = GetAccessToken(tpl_id, tpl_secret, tpl_guid, tpl_user_id)
+access_token = get_access_token(tpl_id, tpl_secret, tpl_guid, tpl_user_id)
 
 
 # testing code below
@@ -575,7 +585,7 @@ if __name__ == '__main__':
 
 
 
-    a = GetOrdersSummary()
+    a = get_order_summary()
     print(a)
 
     #a = Billboard()

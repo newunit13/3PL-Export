@@ -2,7 +2,7 @@ import TPLC
 import csv
 
 # Get all items from 3PL that are going to be updated
-items = TPLC.GetItems(customer_id=1, pgsiz=100, pgnum=1, rql="readOnly.deactivated==False")
+items = TPLC.get_items(customer_id=1, pgsiz=100, pgnum=1, rql="readOnly.deactivated==False")
 
 # Turn list into hash indexed on SKU
 items = {item["sku"]:item for item in items}
@@ -22,7 +22,7 @@ with open('Compendium SKU Update.csv', 'r') as csvfile:
         item_id = items[old_sku]["itemId"]
 
         # Get current item config from 3PLC
-        item, etag = TPLC.GetItem(1, item_id)
+        item, etag = TPLC.get_item(1, item_id)
         
         # Update the local copy's SKU
         item["sku"] = new_sku
@@ -31,4 +31,4 @@ with open('Compendium SKU Update.csv', 'r') as csvfile:
         item["upc"] = old_sku
 
         # Push updated config back to 3PLC
-        TPLC.UpdateItem(customer_id=1, item_id=item_id, etag=etag, payload=item)
+        TPLC.update_item(customer_id=1, item_id=item_id, etag=etag, payload=item)
